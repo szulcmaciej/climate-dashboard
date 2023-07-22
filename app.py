@@ -1,12 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objs as go
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import plotly.graph_objects as go
 import matplotlib
 
-@st.cache_data
+
+@st.cache_data(ttl=timedelta(hours=6))
 def get_antarctic_sea_ice_extent_data():
     url = 'https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv'
     df = pd.read_csv(url, skipinitialspace=True, skiprows=[1])
@@ -17,7 +18,8 @@ def get_antarctic_sea_ice_extent_data():
     df = df[['date', 'day_of_year', 'value', 'date_formatted']]
     return df
 
-@st.cache_data
+
+@st.cache_data(ttl=timedelta(hours=6))
 def get_north_atlantic_sst_data():
     url = 'https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json'
     df = pd.read_json(url)
@@ -63,8 +65,8 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
                                      line=dict(color='red', width=3),
                                      hovertemplate=
                                      '<b>Date</b>: %{customdata}<br>' +
-                                     '<b>'+yaxis_title+'</b>: %{y:.2f}'+y_hover_format+'<br>'
-                                     '<extra></extra>',
+                                     '<b>' + yaxis_title + '</b>: %{y:.2f}' + y_hover_format + '<br>'
+                                                                                               '<extra></extra>',
                                      customdata=year_data['date_formatted']))
         else:
             fig.add_trace(go.Scatter(x=year_data['day_of_year'],
@@ -75,8 +77,8 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
                                      opacity=0.3,
                                      hovertemplate=
                                      '<b>Date</b>: %{customdata}<br>' +
-                                     '<b>'+yaxis_title+'</b>: %{y:.2f}'+y_hover_format+'<br>'
-                                     '<extra></extra>',
+                                     '<b>' + yaxis_title + '</b>: %{y:.2f}' + y_hover_format + '<br>'
+                                                                                               '<extra></extra>',
                                      customdata=year_data['date_formatted']))
 
     fig.update_layout(title=title,
@@ -90,15 +92,18 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
 
 def main():
     st.title('Climate Change Dashboard')
-    avg_year_min, avg_year_max = st.slider('Select the year range to calculate the multi-year average for anomaly calculation', 1981, 2022, (1981, 2022))
+    avg_year_min, avg_year_max = st.slider(
+        'Select the year range to calculate the multi-year average for anomaly calculation', 1981, 2022, (1981, 2022))
     sea_ice_df = get_antarctic_sea_ice_extent_data()
     sst_df = get_north_atlantic_sst_data()
 
     sea_ice_df_anomalies = calculate_anomalies(sea_ice_df, avg_year_min, avg_year_max)
     sst_df_anomalies = calculate_anomalies(sst_df, avg_year_min, avg_year_max)
 
-    sie_anomalies_fig = prepare_figure(sea_ice_df_anomalies, 'Antarctic Sea Ice Extent Anomalies', 'Ice Extent Anomaly (10^6 sq km)', '')
-    sst_anomalies_fig = prepare_figure(sst_df_anomalies, 'North Atlantic Sea Surface Temperature Anomalies', 'Temperature Anomaly [C]', ' C')
+    sie_anomalies_fig = prepare_figure(sea_ice_df_anomalies, 'Antarctic Sea Ice Extent Anomalies',
+                                       'Ice Extent Anomaly (10^6 sq km)', '')
+    sst_anomalies_fig = prepare_figure(sst_df_anomalies, 'North Atlantic Sea Surface Temperature Anomalies',
+                                       'Temperature Anomaly [C]', ' C')
 
     sie_fig = prepare_figure(sea_ice_df, 'Antarctic Sea Ice Extent', 'Ice Extent (10^6 sq km)', '')
     sst_fig = prepare_figure(sst_df, 'North Atlantic Sea Surface Temperature', 'Temperature [C]', ' C')
@@ -121,8 +126,7 @@ def main():
     st.write('The data used in this dashboard was obtained from the following sources:')
     st.write('Antarctic Sea Ice Extent: https://nsidc.org/data/g02135')
     st.write('North Atlantic Sea Surface Temperature: https://climatereanalyzer.org/clim/sst_daily')
-    # TODO: Add link to github repo
-    st.write('The code used to create this dashboard can be found at')
+    st.write('The code used to create this dashboard can be found at https://github.com/szulcmaciej/climate-dashboard')
 
 
 if __name__ == '__main__':
