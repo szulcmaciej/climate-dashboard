@@ -84,8 +84,8 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
     fig.update_layout(title=title,
                       xaxis_title='Day of Year',
                       yaxis_title=yaxis_title,
-                      width=900,
-                      height=600,
+                      # width=900,
+                      # height=600,
                       legend={'traceorder': 'reversed'})
     return fig
 
@@ -113,16 +113,16 @@ def main():
     st.header('North Atlantic Sea Surface Temperature')
     sst_tab1, sst_tab2 = st.tabs(["SST", "SST Anomaly"])
     with sst_tab1:
-        st.plotly_chart(sst_fig)
+        st.plotly_chart(sst_fig, use_container_width=True)
     with sst_tab2:
-        st.plotly_chart(sst_anomalies_fig)
+        st.plotly_chart(sst_anomalies_fig, use_container_width=True)
 
     st.header('Antarctic Sea Ice Extent')
     sie_tab1, sie_tab2 = st.tabs(["SIE", "SIE Anomaly"])
     with sie_tab1:
-        st.plotly_chart(sie_fig)
+        st.plotly_chart(sie_fig, use_container_width=True)
     with sie_tab2:
-        st.plotly_chart(sie_anomalies_fig)
+        st.plotly_chart(sie_anomalies_fig, use_container_width=True)
 
     st.write('This dashboard was created to explore the effects of climate change on the North Atlantic and Antarctic regions.')
     st.write('The data used in this dashboard was obtained from the following sources:')
