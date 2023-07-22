@@ -1,3 +1,4 @@
+import numpy as np
 import streamlit as st
 import pandas as pd
 import plotly.graph_objs as go
@@ -55,7 +56,7 @@ def calculate_anomalies(df, start_year, end_year):
     averages = df_range.groupby(df_range['date'].dt.dayofyear)['value'].mean()
 
     # Calculate anomalies by subtracting the multi-year average from the daily values
-    df['value'] = df.apply(lambda row: row['value'] - averages[row['day_of_year']], axis=1)
+    df['value'] = df.apply(lambda row: row['value'] - averages[row['day_of_year']] if row['day_of_year'] in averages.index else np.NaN, axis=1)
 
     return df
 
