@@ -92,6 +92,8 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
 
 def main():
     st.title('Climate Change Dashboard')
+    st.write('AKA the "I\'m not a climate scientist but I play one on the internet" dashboard')
+    st.write('AKA is it hot in here or is it just me? 🤔')
     avg_year_min, avg_year_max = st.slider(
         'Select the year range to calculate the multi-year average for anomaly calculation', 1981, 2022, (1981, 2022))
     sea_ice_df = get_antarctic_sea_ice_extent_data()
