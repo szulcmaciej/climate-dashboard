@@ -34,6 +34,18 @@ def get_north_atlantic_sst_data():
     return df
 
 
+def interpolate_missing_dates(df):
+    min_year = df['date'].dt.year.min()
+    max_year = df['date'].dt.year.max()
+    full_date_range = pd.date_range(start=f'{min_year}-01-01', end=f'{max_year}-12-31')
+    df_full_range = pd.DataFrame(full_date_range, columns=['date'])
+    df = pd.merge(df_full_range, df, on='date', how='left')
+    df['day_of_year'] = df['date'].dt.dayofyear
+    df['value'] = df['value'].interpolate(method='linear', limit_area='inside')
+    df['date_formatted'] = df['date'].dt.strftime('%Y-%m-%d')
+    return df
+
+
 def calculate_anomalies(df, start_year, end_year):
     df = df.copy()
     # Filter the data to include only the years in the specified range
@@ -84,8 +96,6 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
     fig.update_layout(title=title,
                       xaxis_title='Day of Year',
                       yaxis_title=yaxis_title,
-                      # width=900,
-                      # height=600,
                       legend={'traceorder': 'reversed'})
     return fig
 
@@ -97,6 +107,8 @@ def main():
 
     sea_ice_df = get_antarctic_sea_ice_extent_data()
     sst_df = get_north_atlantic_sst_data()
+    sea_ice_df = interpolate_missing_dates(sea_ice_df)
+    sst_df = interpolate_missing_dates(sst_df)
 
     sie_fig = prepare_figure(sea_ice_df, 'Antarctic Sea Ice Extent', 'Ice Extent (10^6 sq km)', '')
     sst_fig = prepare_figure(sst_df, 'North Atlantic Sea Surface Temperature', 'Temperature [C]', ' C')
