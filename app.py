@@ -94,18 +94,9 @@ def main():
     st.title('Climate Change Dashboard')
     st.write('AKA the "I\'m not a climate scientist but I play one on the internet" dashboard')
     st.write('AKA is it hot in here or is it just me? 🤔')
-    avg_year_min, avg_year_max = st.slider(
-        'Select the year range to calculate the multi-year average for anomaly calculation', 1981, 2022, (1981, 2022))
+
     sea_ice_df = get_antarctic_sea_ice_extent_data()
     sst_df = get_north_atlantic_sst_data()
-
-    sea_ice_df_anomalies = calculate_anomalies(sea_ice_df, avg_year_min, avg_year_max)
-    sst_df_anomalies = calculate_anomalies(sst_df, avg_year_min, avg_year_max)
-
-    sie_anomalies_fig = prepare_figure(sea_ice_df_anomalies, 'Antarctic Sea Ice Extent Anomalies',
-                                       'Ice Extent Anomaly (10^6 sq km)', '')
-    sst_anomalies_fig = prepare_figure(sst_df_anomalies, 'North Atlantic Sea Surface Temperature Anomalies',
-                                       'Temperature Anomaly [C]', ' C')
 
     sie_fig = prepare_figure(sea_ice_df, 'Antarctic Sea Ice Extent', 'Ice Extent (10^6 sq km)', '')
     sst_fig = prepare_figure(sst_df, 'North Atlantic Sea Surface Temperature', 'Temperature [C]', ' C')
@@ -115,6 +106,16 @@ def main():
     with sst_tab1:
         st.plotly_chart(sst_fig, use_container_width=True)
     with sst_tab2:
+        sst_min_year = int(sst_df['date'].dt.year.min())
+        sst_max_year = int(sst_df['date'].dt.year.max())
+        sst_avg_year_range_min, sst_avg_year_range_max = st.slider(
+            'Select the year range to calculate the multi-year average for anomaly calculation baseline', sst_min_year,
+            sst_max_year,
+            (sst_min_year, sst_max_year - 1),
+            key='sst_avg_year_range')
+        sst_df_anomalies = calculate_anomalies(sst_df, sst_avg_year_range_min, sst_avg_year_range_max)
+        sst_anomalies_fig = prepare_figure(sst_df_anomalies, 'North Atlantic Sea Surface Temperature Anomalies',
+                                           'Temperature Anomaly [C]', ' C')
         st.plotly_chart(sst_anomalies_fig, use_container_width=True)
 
     st.header('Antarctic Sea Ice Extent')
@@ -122,6 +123,15 @@ def main():
     with sie_tab1:
         st.plotly_chart(sie_fig, use_container_width=True)
     with sie_tab2:
+        sie_min_year = int(sea_ice_df['date'].dt.year.min())
+        sie_max_year = int(sea_ice_df['date'].dt.year.max())
+        sie_avg_year_range_min, sie_avg_year_range_max = st.slider(
+            'Select the year range to calculate the multi-year average for anomaly calculation baseline', sie_min_year, sie_max_year,
+            (sie_min_year, sie_max_year - 1),
+            key='sie_avg_year_range')
+        sea_ice_df_anomalies = calculate_anomalies(sea_ice_df, sie_avg_year_range_min, sie_avg_year_range_max)
+        sie_anomalies_fig = prepare_figure(sea_ice_df_anomalies, 'Antarctic Sea Ice Extent Anomalies',
+                                           'Ice Extent Anomaly (10^6 sq km)', '')
         st.plotly_chart(sie_anomalies_fig, use_container_width=True)
 
     st.write('This dashboard was created to explore the effects of climate change on the North Atlantic and Antarctic regions.')
