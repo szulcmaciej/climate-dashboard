@@ -102,9 +102,9 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
 
 
 def main():
-    st.title('Climate Change Dashboard')
+    st.set_page_config(page_title='Toasty Times', page_icon=':fire:')
+    st.title('Toasty Times')
     st.write('AKA the "I\'m not a climate scientist but I play one on the internet" dashboard')
-    st.write('AKA is it hot in here or is it just me? 🤔')
 
     sea_ice_df = get_antarctic_sea_ice_extent_data()
     sst_df = get_north_atlantic_sst_data()
@@ -152,6 +152,8 @@ def main():
     st.write('Antarctic Sea Ice Extent: https://nsidc.org/data/g02135')
     st.write('North Atlantic Sea Surface Temperature: https://climatereanalyzer.org/clim/sst_daily')
     st.write('The code used to create this dashboard can be found at https://github.com/szulcmaciej/climate-dashboard')
+
+    st.image('https://static01.nyt.com/images/2016/08/05/us/05onfire1_xp/05onfire1_xp-superJumbo-v2.jpg?quality=75&auto=webp', caption='KC Green')
 
 
 if __name__ == '__main__':
