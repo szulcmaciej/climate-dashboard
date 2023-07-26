@@ -103,7 +103,7 @@ def prepare_figure(df, title, yaxis_title, y_hover_format):
 
 def main():
     st.set_page_config(page_title='Toasty Times', page_icon=':fire:')
-    st.title('Toasty Times')
+    st.title('🔥 Toasty Times 🔥')
     st.write('AKA the "I\'m not a climate scientist but I play one on the internet" dashboard')
 
     sea_ice_df = get_antarctic_sea_ice_extent_data()
@@ -124,7 +124,7 @@ def main():
         sst_avg_year_range_min, sst_avg_year_range_max = st.slider(
             'Select the year range to calculate the multi-year average for anomaly calculation baseline', sst_min_year,
             sst_max_year,
-            (sst_min_year, sst_max_year - 1),
+            (1991, 2020),
             key='sst_avg_year_range')
         sst_df_anomalies = calculate_anomalies(sst_df, sst_avg_year_range_min, sst_avg_year_range_max)
         sst_anomalies_fig = prepare_figure(sst_df_anomalies, 'North Atlantic Sea Surface Temperature Anomalies',
@@ -140,7 +140,7 @@ def main():
         sie_max_year = int(sea_ice_df['date'].dt.year.max())
         sie_avg_year_range_min, sie_avg_year_range_max = st.slider(
             'Select the year range to calculate the multi-year average for anomaly calculation baseline', sie_min_year, sie_max_year,
-            (sie_min_year, sie_max_year - 1),
+            (1991, 2020),
             key='sie_avg_year_range')
         sea_ice_df_anomalies = calculate_anomalies(sea_ice_df, sie_avg_year_range_min, sie_avg_year_range_max)
         sie_anomalies_fig = prepare_figure(sea_ice_df_anomalies, 'Antarctic Sea Ice Extent Anomalies',
