@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 import matplotlib
 
 
-@st.cache_data(ttl=timedelta(hours=6))
+@st.cache_data(ttl=timedelta(hours=1))
 def get_antarctic_sea_ice_extent_data():
     url = 'https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv'
     df = pd.read_csv(url, skipinitialspace=True, skiprows=[1])
@@ -20,7 +20,7 @@ def get_antarctic_sea_ice_extent_data():
     return df
 
 
-@st.cache_data(ttl=timedelta(hours=6))
+@st.cache_data(ttl=timedelta(hours=1))
 def get_north_atlantic_sst_data():
     url = 'https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json'
     df = pd.read_json(url)
