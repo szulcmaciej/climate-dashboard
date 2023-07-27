@@ -171,14 +171,12 @@ def main():
     AntarcticSeaIceExtent()
 
     st.header('About')
-    st.write('Thanks for checking this out!')
     st.write(
-        'This dashboard was heavily inspired by the charts posted on Twitter by prof. Eliot Jacobson [@EliotJacobson](https://twitter.com/EliotJacobson).')
-    st.write(
+        'This dashboard was heavily inspired by the charts posted on Twitter by prof. Eliot Jacobson [@EliotJacobson](https://twitter.com/EliotJacobson). '
         'I just wanted to learn how to use Streamlit and it seemed like a fun project to try to recreate some of the plots from his profile.')
-    st.write('The code used to create this dashboard can be found at https://github.com/szulcmaciej/climate-dashboard')
+    st.write('The code used to create this dashboard can be found on [GitHub](https://github.com/szulcmaciej/climate-dashboard)')
     st.write(
-        'If you have any suggestions or feedback, please create an issue on GitHub or reach out to me on Twitter [@nerdy_surfer](https://twitter.com/nerdy_surfer)')
+        'Thanks for checking this out! If you have any suggestions or feedback, please create an issue on GitHub or reach out to me on Twitter [@nerdy_surfer](https://twitter.com/nerdy_surfer)')
     st.image(
         'https://static01.nyt.com/images/2016/08/05/us/05onfire1_xp/05onfire1_xp-superJumbo-v2.jpg?quality=75&auto=webp',
         caption='KC Green')
