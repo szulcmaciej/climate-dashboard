@@ -36,10 +36,11 @@ def get_north_atlantic_sst_data():
 
 
 class DataSource:
-    def __init__(self, url, title, description):
+    def __init__(self, url, title, y_axis_title, y_axis_unit):
         self.url = url
         self.title = title
-        self.description = description
+        self.y_axis_title = y_axis_title
+        self.y_axis_unit = y_axis_unit
         self.df = None
         self.fetch_data()
         self.interpolate_missing_dates()
@@ -65,7 +66,7 @@ class DataSource:
             lambda row: row['value'] - averages[row['day_of_year']] if row['day_of_year'] in averages.index else np.NaN,
             axis=1)
 
-    def prepare_figure(self, title, yaxis_title, y_hover_format):
+    def prepare_figure(self, title, yaxis_title):
         current_year = datetime.now().year
         fig = go.Figure()
         years = self.df['date'].dt.year.unique()
@@ -82,8 +83,8 @@ class DataSource:
                                          line=dict(color='red', width=3),
                                          hovertemplate=
                                          '<b>Date</b>: %{customdata}<br>' +
-                                         '<b>' + yaxis_title + '</b>: %{y:.2f}' + y_hover_format + '<br>'
-                                                                                                   '<extra></extra>',
+                                         '<b>' + yaxis_title + '</b>: %{y:.2f}' + '<br>' +
+                                         '<extra></extra>',
                                          customdata=year_data['date_formatted']))
             else:
                 fig.add_trace(go.Scatter(x=year_data['day_of_year'],
@@ -94,8 +95,8 @@ class DataSource:
                                          opacity=0.3,
                                          hovertemplate=
                                          '<b>Date</b>: %{customdata}<br>' +
-                                         '<b>' + yaxis_title + '</b>: %{y:.2f}' + y_hover_format + '<br>'
-                                                                                                   '<extra></extra>',
+                                         '<b>' + yaxis_title + '</b>: %{y:.2f}' + '<br>' +
+                                         '<extra></extra>',
                                          customdata=year_data['date_formatted']))
 
         fig.update_layout(title=title,
@@ -108,42 +109,57 @@ class DataSource:
         st.header(self.title)
         tab1, tab2 = st.tabs([self.title, f"{self.title} Anomaly"])
         with tab1:
-            fig = self.prepare_figure(self.title, 'Value', '')
+            full_y_axis_title = f'{self.y_axis_title} ({self.y_axis_unit})'
+            fig = self.prepare_figure(self.title, full_y_axis_title)
             st.plotly_chart(fig, use_container_width=True)
         with tab2:
             min_year = int(self.df['date'].dt.year.min())
             max_year = int(self.df['date'].dt.year.max())
             avg_year_range_min, avg_year_range_max = st.slider(
-                'Select the year range to calculate the multi-year average for anomaly calculation baseline', min_year, max_year,
+                'Select the year range to calculate the multi-year baseline for anomaly calculation', min_year,
+                max_year,
                 (1991, 2020),
                 key=f'{self.title}_avg_year_range')
             self.calculate_anomalies(avg_year_range_min, avg_year_range_max)
-            anomalies_fig = self.prepare_figure(f'{self.title} Anomalies', 'Anomaly', '')
+            full_y_axis_title = f'{self.y_axis_title} Anomaly ({self.y_axis_unit})'
+            anomalies_fig = self.prepare_figure(f'{self.title} Anomalies', full_y_axis_title)
             st.plotly_chart(anomalies_fig, use_container_width=True)
 
 
 class AntarcticSeaIceExtent(DataSource):
+    def __init__(self):
+        super().__init__('https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv',
+                         'Antarctic Sea Ice Extent',
+                         'Antarctic SIE', 'million square kilometers')
+
     def fetch_data(self):
         self.df = get_antarctic_sea_ice_extent_data()
 
     def generate_layout(self):
         super().generate_layout()
-        with st.expander('Data Source'):
+        with st.expander('Data description'):
+            st.write('This data represents the daily sea ice extent in the Antarctic region. '
+                     'The data is obtained from the National Snow and Ice Data Center (NSIDC).')
             st.write('The data used in this section was obtained from the following source:')
             st.write('https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv')
-            st.write("Here's more info about this data: https://nsidc.org/data/g02135")
+            st.write("Here's more info about the data: https://nsidc.org/data/g02135")
 
 
 class NorthAtlanticSST(DataSource):
+    def __init__(self):
+        super().__init__('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json',
+                         'North Atlantic Sea Surface Temperature',
+                         'North Atlantic SST', '°C')
+
     def fetch_data(self):
         self.df = get_north_atlantic_sst_data()
 
     def generate_layout(self):
         super().generate_layout()
-        with st.expander('Data Source'):
+        with st.expander('Data description'):
             st.write('The data used in this section was obtained from the following source:')
             st.write('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json')
-            st.write('North Atlantic Sea Surface Temperature: https://climatereanalyzer.org/clim/sst_daily')
+            st.write("Here's more info about the data: https://climatereanalyzer.org/clim/sst_daily")
 
 
 def main():
@@ -151,17 +167,21 @@ def main():
     st.title('🔥 Toasty Times 🔥')
     st.write('AKA the "I\'m not a climate scientist but I play one on the internet" dashboard')
 
-    AntarcticSeaIceExtent('https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv',
-                                                     'Antarctic Sea Ice Extent',
-                                                        'Antarctic Sea Ice Extent (million square kilometers)')
+    NorthAtlanticSST()
+    AntarcticSeaIceExtent()
 
-    NorthAtlanticSST('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json',
-                     'North Atlantic Sea Surface Temperature',
-                     'North Atlantic Sea Surface Temperature (°C)')
-
-
+    st.header('About')
+    st.write('Thanks for checking this out!')
+    st.write(
+        'This dashboard was heavily inspired by the charts posted on Twitter by prof. Eliot Jacobson [@EliotJacobson](https://twitter.com/EliotJacobson).')
+    st.write(
+        'I just wanted to learn how to use Streamlit and it seemed like a fun project to try to recreate some of the plots from his profile.')
     st.write('The code used to create this dashboard can be found at https://github.com/szulcmaciej/climate-dashboard')
-    st.image('https://static01.nyt.com/images/2016/08/05/us/05onfire1_xp/05onfire1_xp-superJumbo-v2.jpg?quality=75&auto=webp', caption='KC Green')
+    st.write(
+        'If you have any suggestions or feedback, please create an issue on GitHub or reach out to me on Twitter [@nerdy_surfer](https://twitter.com/nerdy_surfer)')
+    st.image(
+        'https://static01.nyt.com/images/2016/08/05/us/05onfire1_xp/05onfire1_xp-superJumbo-v2.jpg?quality=75&auto=webp',
+        caption='KC Green')
 
 
 if __name__ == '__main__':
