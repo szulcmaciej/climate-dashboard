@@ -75,7 +75,7 @@ class DataSource:
         current_year = datetime.now().year
         fig = go.Figure()
         years = self.df['date'].dt.year.unique()
-        cmap = matplotlib.cm.get_cmap('plasma')
+        cmap = matplotlib.colormaps.get_cmap('plasma')
 
         for i, year in enumerate(years):
             color = matplotlib.colors.rgb2hex(cmap(i / len(years)))
