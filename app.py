@@ -87,10 +87,14 @@ class DataSource:
                                          name=str(year),
                                          line=dict(color='red', width=3),
                                          hovertemplate=
-                                         '<b>Date</b>: %{customdata}<br>' +
-                                         '<b>' + yaxis_title + '</b>: %{y:.2f}' + '<br>' +
+                                         '<b>Date</b>: %{customdata[0]}<br>' +
+                                         '<b>' + self.title_short + '</b>: %{customdata[1]:.2f}<br>' +
+                                         '<b>Anomaly</b>: %{customdata[2]:.2f}<br>' +
+                                         '<b>Sigma</b>: %{customdata[3]:.2f}<br>' +
                                          '<extra></extra>',
-                                         customdata=year_data['date_formatted']))
+                                         customdata=np.stack(
+                                             (year_data['date_formatted'], year_data['value'], year_data['anomaly'], year_data['sigma']),
+                                             axis=-1)))
             else:
                 fig.add_trace(go.Scatter(x=year_data['day_of_year'],
                                          y=year_data[value_column],
@@ -99,10 +103,15 @@ class DataSource:
                                          line=dict(color=color),
                                          opacity=0.3,
                                          hovertemplate=
-                                         '<b>Date</b>: %{customdata}<br>' +
-                                         '<b>' + yaxis_title + '</b>: %{y:.2f}' + '<br>' +
+                                         '<b>Date</b>: %{customdata[0]}<br>' +
+                                         '<b>' + self.title_short + '</b>: %{customdata[1]:.2f}<br>' +
+                                         '<b>Anomaly</b>: %{customdata[2]:.2f}<br>' +
+                                         '<b>Sigma</b>: %{customdata[3]:.2f}<br>' +
                                          '<extra></extra>',
-                                         customdata=year_data['date_formatted']))
+                                         customdata=np.stack(
+                                             (year_data['date_formatted'], year_data['value'], year_data['anomaly'],
+                                              year_data['sigma']),
+                                             axis=-1)))
 
         fig.update_layout(title=title,
                           xaxis_title='Day of Year',
