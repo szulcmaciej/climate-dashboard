@@ -36,16 +36,16 @@ def get_north_atlantic_sst_data():
 
 
 class DataSource:
-    def __init__(self, url, title, y_axis_title, y_axis_unit):
+    def __init__(self, url, title, title_short, y_axis_unit):
         self.url = url
         self.title = title
-        self.y_axis_title = y_axis_title
+        self.title_short = title_short
         self.y_axis_unit = y_axis_unit
+        self.default_year_range = (1991, 2020)
         self.df = None
         self.fetch_data()
         self.interpolate_missing_dates()
         self.generate_layout()
-        self.default_year_range_for_avg = (1991, 2020)
 
     def fetch_data(self):
         raise NotImplementedError
@@ -60,14 +60,18 @@ class DataSource:
         self.df['value'] = self.df['value'].interpolate(method='linear', limit_area='inside')
         self.df['date_formatted'] = self.df['date'].dt.strftime('%Y-%m-%d')
 
-    def calculate_anomalies(self, start_year, end_year):
+    def calculate_anomalies_and_sigmas(self, start_year, end_year):
         df_range = self.df[(self.df['date'].dt.year >= start_year) & (self.df['date'].dt.year <= end_year)]
         averages = df_range.groupby(df_range['date'].dt.dayofyear)['value'].mean()
-        self.df['value'] = self.df.apply(
+        daily_sigma = df_range.groupby(df_range['date'].dt.dayofyear)['value'].std()
+        self.df['anomaly'] = self.df.apply(
             lambda row: row['value'] - averages[row['day_of_year']] if row['day_of_year'] in averages.index else np.NaN,
             axis=1)
+        self.df['sigma'] = self.df.apply(
+            lambda row: (row['anomaly']) / daily_sigma[row['day_of_year']] if
+            row['day_of_year'] in averages.index else np.NaN, axis=1)
 
-    def prepare_figure(self, title, yaxis_title):
+    def prepare_figure(self, title, yaxis_title, value_column):
         current_year = datetime.now().year
         fig = go.Figure()
         years = self.df['date'].dt.year.unique()
@@ -78,7 +82,7 @@ class DataSource:
             year_data = self.df[self.df['date'].dt.year == year]
             if year == current_year:
                 fig.add_trace(go.Scatter(x=year_data['day_of_year'],
-                                         y=year_data['value'],
+                                         y=year_data[value_column],
                                          mode='lines',
                                          name=str(year),
                                          line=dict(color='red', width=3),
@@ -89,7 +93,7 @@ class DataSource:
                                          customdata=year_data['date_formatted']))
             else:
                 fig.add_trace(go.Scatter(x=year_data['day_of_year'],
-                                         y=year_data['value'],
+                                         y=year_data[value_column],
                                          mode='lines',
                                          name=str(year),
                                          line=dict(color=color),
@@ -108,23 +112,32 @@ class DataSource:
 
     def generate_layout(self):
         st.header(self.title)
-        tab1, tab2 = st.tabs([self.title, f"{self.title} Anomaly"])
-        with tab1:
-            full_y_axis_title = f'{self.y_axis_title} ({self.y_axis_unit})'
-            fig = self.prepare_figure(self.title, full_y_axis_title)
+        data_min_year = int(self.df['date'].dt.year.min())
+        data_max_year = int(self.df['date'].dt.year.max())
+        year_range_min, year_range_max = st.slider(
+            'Select the multi-year baseline for anomalies and sigmas', data_min_year,
+            data_max_year,
+            self.default_year_range,
+            key=f'{self.title}_year_range')
+        self.calculate_anomalies_and_sigmas(year_range_min, year_range_max)
+
+        value_tab, anomaly_tab, sigma_tab = st.tabs([self.title_short,
+                                                     f"{self.title_short} Anomaly",
+                                                     f"{self.title_short} Sigma"])
+        with value_tab:
+            full_y_axis_title = f'{self.title_short} ({self.y_axis_unit})'
+            fig = self.prepare_figure(self.title, full_y_axis_title, 'value')
             st.plotly_chart(fig, use_container_width=True)
-        with tab2:
-            min_year = int(self.df['date'].dt.year.min())
-            max_year = int(self.df['date'].dt.year.max())
-            avg_year_range_min, avg_year_range_max = st.slider(
-                'Select the year range to calculate the multi-year baseline for anomaly calculation', min_year,
-                max_year,
-                self.default_year_range_for_avg,
-                key=f'{self.title}_avg_year_range')
-            self.calculate_anomalies(avg_year_range_min, avg_year_range_max)
-            full_y_axis_title = f'{self.y_axis_title} Anomaly ({self.y_axis_unit})'
-            anomalies_fig = self.prepare_figure(f'{self.title} Anomalies', full_y_axis_title)
+        with anomaly_tab:
+            full_y_axis_title = f'{self.title_short} Anomaly ({self.y_axis_unit})'
+            anomalies_fig = self.prepare_figure(f'{self.title} Anomalies', full_y_axis_title, 'anomaly')
             st.plotly_chart(anomalies_fig, use_container_width=True)
+            st.write(f'Anomaly is the difference from the daily average for years {year_range_min}-{year_range_max}')
+        with sigma_tab:
+            full_y_axis_title = f'{self.title_short} Sigma'
+            anomalies_fig = self.prepare_figure(f'{self.title} Sigma', full_y_axis_title, 'sigma')
+            st.plotly_chart(anomalies_fig, use_container_width=True)
+            st.write(f'Sigma is the anomaly divided by the daily standard deviation for years {year_range_min}-{year_range_max}')
 
 
 class AntarcticSeaIceExtent(DataSource):
