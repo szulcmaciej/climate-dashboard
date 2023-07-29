@@ -71,47 +71,38 @@ class DataSource:
             lambda row: (row['anomaly']) / daily_sigma[row['day_of_year']] if
             row['day_of_year'] in averages.index else np.NaN, axis=1)
 
-    def prepare_figure(self, title, yaxis_title, value_column):
+    def prepare_figure(self, title, yaxis_title, y_axis_column):
         current_year = datetime.now().year
         fig = go.Figure()
         years = self.df['date'].dt.year.unique()
         cmap = matplotlib.colormaps.get_cmap('plasma')
+        hover_template = "<br>".join([
+            "<b>Date</b>: %{customdata[0]}",
+            f"<b>{self.title_short}</b>: %{{customdata[1]:.2f}}",
+            "<b>Anomaly</b>: %{customdata[2]:.2f}",
+            "<b>Sigma</b>: %{customdata[3]:.2f}"])
 
         for i, year in enumerate(years):
             color = matplotlib.colors.rgb2hex(cmap(i / len(years)))
             year_data = self.df[self.df['date'].dt.year == year]
+            hover_custom_data = year_data[['date_formatted', 'value', 'anomaly', 'sigma']]
             if year == current_year:
                 fig.add_trace(go.Scatter(x=year_data['day_of_year'],
-                                         y=year_data[value_column],
+                                         y=year_data[y_axis_column],
                                          mode='lines',
                                          name=str(year),
                                          line=dict(color='red', width=3),
-                                         hovertemplate=
-                                         '<b>Date</b>: %{customdata[0]}<br>' +
-                                         '<b>' + self.title_short + '</b>: %{customdata[1]:.2f}<br>' +
-                                         '<b>Anomaly</b>: %{customdata[2]:.2f}<br>' +
-                                         '<b>Sigma</b>: %{customdata[3]:.2f}<br>' +
-                                         '<extra></extra>',
-                                         customdata=np.stack(
-                                             (year_data['date_formatted'], year_data['value'], year_data['anomaly'], year_data['sigma']),
-                                             axis=-1)))
+                                         hovertemplate=hover_template,
+                                         customdata=hover_custom_data))
             else:
                 fig.add_trace(go.Scatter(x=year_data['day_of_year'],
-                                         y=year_data[value_column],
+                                         y=year_data[y_axis_column],
                                          mode='lines',
                                          name=str(year),
                                          line=dict(color=color),
                                          opacity=0.3,
-                                         hovertemplate=
-                                         '<b>Date</b>: %{customdata[0]}<br>' +
-                                         '<b>' + self.title_short + '</b>: %{customdata[1]:.2f}<br>' +
-                                         '<b>Anomaly</b>: %{customdata[2]:.2f}<br>' +
-                                         '<b>Sigma</b>: %{customdata[3]:.2f}<br>' +
-                                         '<extra></extra>',
-                                         customdata=np.stack(
-                                             (year_data['date_formatted'], year_data['value'], year_data['anomaly'],
-                                              year_data['sigma']),
-                                             axis=-1)))
+                                         hovertemplate=hover_template,
+                                         customdata=hover_custom_data))
 
         fig.update_layout(title=title,
                           xaxis_title='Day of Year',
@@ -141,12 +132,12 @@ class DataSource:
             full_y_axis_title = f'{self.title_short} Anomaly ({self.y_axis_unit})'
             anomalies_fig = self.prepare_figure(f'{self.title} Anomalies', full_y_axis_title, 'anomaly')
             st.plotly_chart(anomalies_fig, use_container_width=True)
-            st.write(f'Anomaly is the difference from the daily average for years {year_range_min}-{year_range_max}')
+            st.write(f'Anomaly is the difference from the daily average of selected years')
         with sigma_tab:
             full_y_axis_title = f'{self.title_short} Sigma'
             anomalies_fig = self.prepare_figure(f'{self.title} Sigma', full_y_axis_title, 'sigma')
             st.plotly_chart(anomalies_fig, use_container_width=True)
-            st.write(f'Sigma is the anomaly divided by the daily standard deviation for years {year_range_min}-{year_range_max}')
+            st.write(f'Sigma is the anomaly divided by the daily standard deviation of selected years')
 
 
 class AntarcticSeaIceExtent(DataSource):
