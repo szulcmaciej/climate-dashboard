@@ -45,6 +45,7 @@ class DataSource:
         self.fetch_data()
         self.interpolate_missing_dates()
         self.generate_layout()
+        self.default_year_range_for_avg = (1991, 2020)
 
     def fetch_data(self):
         raise NotImplementedError
@@ -118,7 +119,7 @@ class DataSource:
             avg_year_range_min, avg_year_range_max = st.slider(
                 'Select the year range to calculate the multi-year baseline for anomaly calculation', min_year,
                 max_year,
-                (1991, 2020),
+                self.default_year_range_for_avg,
                 key=f'{self.title}_avg_year_range')
             self.calculate_anomalies(avg_year_range_min, avg_year_range_max)
             full_y_axis_title = f'{self.y_axis_title} Anomaly ({self.y_axis_unit})'
