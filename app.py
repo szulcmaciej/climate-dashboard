@@ -9,8 +9,7 @@ import matplotlib
 
 
 @st.cache_data(ttl=timedelta(hours=1))
-def get_antarctic_sea_ice_extent_data():
-    url = 'https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv'
+def get_nsidc_daily_ice_data(url: str) -> pd.DataFrame:
     df = pd.read_csv(url, skipinitialspace=True, skiprows=[1])
     df['date'] = pd.to_datetime(df[['Year', 'Month', 'Day']])
     df['day_of_year'] = df['date'].dt.dayofyear
@@ -21,8 +20,7 @@ def get_antarctic_sea_ice_extent_data():
 
 
 @st.cache_data(ttl=timedelta(hours=1))
-def get_north_atlantic_sst_data():
-    url = 'https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json'
+def get_climate_reanalyzer_daily_data(url: str) -> pd.DataFrame:
     df = pd.read_json(url)
     df = df[df['name'].str.isnumeric()].set_index('name').data.apply(pd.Series).stack().reset_index(name='value')
     df.columns = ['Year', 'Day', 'value']
@@ -147,7 +145,7 @@ class AntarcticSeaIceExtent(DataSource):
                          'Antarctic SIE', 'million square kilometers')
 
     def fetch_data(self):
-        self.df = get_antarctic_sea_ice_extent_data()
+        self.df = get_nsidc_daily_ice_data(self.url)
 
     def generate_layout(self):
         super().generate_layout()
@@ -155,25 +153,79 @@ class AntarcticSeaIceExtent(DataSource):
             st.write('This data represents the daily sea ice extent in the Antarctic region. '
                      'The data is obtained from the National Snow and Ice Data Center (NSIDC).')
             st.write('The data used in this section was obtained from the following source:')
-            st.write('https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv')
+            st.write(self.url)
+            st.write("Here's more info about the data: https://nsidc.org/data/g02135")
+
+
+class ArcticSeaIceExtent(DataSource):
+    def __init__(self):
+        super().__init__('https://noaadata.apps.nsidc.org/NOAA/G02135/north/daily/data/N_seaice_extent_daily_v3.0.csv',
+                         'Arctic Sea Ice Extent',
+                         'Arctic SIE', 'million square kilometers')
+
+    def fetch_data(self):
+        self.df = get_nsidc_daily_ice_data(self.url)
+
+    def generate_layout(self):
+        super().generate_layout()
+        with st.expander('Data description'):
+            st.write('This data represents the daily sea ice extent in the Arctic region. '
+                     'The data is obtained from the National Snow and Ice Data Center (NSIDC).')
+            st.write('The data used in this section was obtained from the following source:')
+            st.write(self.url)
             st.write("Here's more info about the data: https://nsidc.org/data/g02135")
 
 
 class NorthAtlanticSST(DataSource):
     def __init__(self):
         super().__init__('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json',
-                         'North Atlantic Sea Surface Temperature',
+                         'North Atlantic Sea Surface Temperature (0-60N, 0-80W)',
                          'North Atlantic SST', '°C')
 
     def fetch_data(self):
-        self.df = get_north_atlantic_sst_data()
+        self.df = get_climate_reanalyzer_daily_data(self.url)
 
     def generate_layout(self):
         super().generate_layout()
         with st.expander('Data description'):
-            st.write('The data used in this section was obtained from the following source:')
-            st.write('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json')
+            # TODO move this to DataSource.generate_layout?
+            st.write('The data used in this section was obtained from here:')
+            st.write(self.url)
             st.write("Here's more info about the data: https://climatereanalyzer.org/clim/sst_daily")
+
+
+class WorldSST(DataSource):
+    def __init__(self):
+        super().__init__('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_world2_sst_day.json',
+                         'World Sea Surface Temperature (60S-60N)',
+                         'World SST', '°C')
+
+    def fetch_data(self):
+        self.df = get_climate_reanalyzer_daily_data(self.url)
+
+    def generate_layout(self):
+        super().generate_layout()
+        with st.expander('Data description'):
+            st.write('The data used in this section was obtained from here:')
+            st.write(self.url)
+            st.write("Here's more info about the data: https://climatereanalyzer.org/clim/sst_daily")
+
+
+class WorldTemp2m(DataSource):
+    def __init__(self):
+        super().__init__('https://climatereanalyzer.org/clim/t2_daily/json/cfsr_world_t2_day.json',
+                         'World 2m Air Temperature',
+                         'World 2m Temp', '°C')
+
+    def fetch_data(self):
+        self.df = get_climate_reanalyzer_daily_data(self.url)
+
+    def generate_layout(self):
+        super().generate_layout()
+        with st.expander('Data description'):
+            st.write('The data used in this section was obtained from here:')
+            st.write(self.url)
+            st.write("Here's more info about the data: https://climatereanalyzer.org/clim/t2_daily/")
 
 
 def main():
@@ -182,7 +234,10 @@ def main():
     st.write('AKA the "I\'m not a climate scientist but I play one on the internet" dashboard')
 
     NorthAtlanticSST()
+    WorldSST()
     AntarcticSeaIceExtent()
+    ArcticSeaIceExtent()
+    WorldTemp2m()
 
     st.header('About')
     st.write(
