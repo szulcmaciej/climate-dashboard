@@ -1,7 +1,6 @@
 import numpy as np
 import streamlit as st
 import pandas as pd
-import plotly.graph_objs as go
 from datetime import datetime, timedelta
 
 import plotly.graph_objects as go
@@ -33,7 +32,7 @@ def get_climate_reanalyzer_daily_data(url: str) -> pd.DataFrame:
     return df
 
 
-class DataSource:
+class DataSourceSection:
     def __init__(self, url, title, title_short, y_axis_unit):
         self.url = url
         self.title = title
@@ -138,7 +137,7 @@ class DataSource:
             st.write(f'Sigma is the anomaly divided by the daily standard deviation of selected years')
 
 
-class AntarcticSeaIceExtent(DataSource):
+class AntarcticSeaIceExtent(DataSourceSection):
     def __init__(self):
         super().__init__('https://noaadata.apps.nsidc.org/NOAA/G02135/south/daily/data/S_seaice_extent_daily_v3.0.csv',
                          'Antarctic Sea Ice Extent',
@@ -157,7 +156,7 @@ class AntarcticSeaIceExtent(DataSource):
             st.write("Here's more info about the data: https://nsidc.org/data/g02135")
 
 
-class ArcticSeaIceExtent(DataSource):
+class ArcticSeaIceExtent(DataSourceSection):
     def __init__(self):
         super().__init__('https://noaadata.apps.nsidc.org/NOAA/G02135/north/daily/data/N_seaice_extent_daily_v3.0.csv',
                          'Arctic Sea Ice Extent',
@@ -176,7 +175,7 @@ class ArcticSeaIceExtent(DataSource):
             st.write("Here's more info about the data: https://nsidc.org/data/g02135")
 
 
-class NorthAtlanticSST(DataSource):
+class NorthAtlanticSST(DataSourceSection):
     def __init__(self):
         super().__init__('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_natlan1_sst_day.json',
                          'North Atlantic Sea Surface Temperature (0-60N, 0-80W)',
@@ -194,7 +193,7 @@ class NorthAtlanticSST(DataSource):
             st.write("Here's more info about the data: https://climatereanalyzer.org/clim/sst_daily")
 
 
-class WorldSST(DataSource):
+class WorldSST(DataSourceSection):
     def __init__(self):
         super().__init__('https://climatereanalyzer.org/clim/sst_daily/json/oisst2.1_world2_sst_day.json',
                          'World Sea Surface Temperature (60S-60N)',
@@ -211,7 +210,7 @@ class WorldSST(DataSource):
             st.write("Here's more info about the data: https://climatereanalyzer.org/clim/sst_daily")
 
 
-class WorldTemp2m(DataSource):
+class WorldTemp2m(DataSourceSection):
     def __init__(self):
         super().__init__('https://climatereanalyzer.org/clim/t2_daily/json/cfsr_world_t2_day.json',
                          'World 2m Air Temperature',
