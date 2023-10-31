@@ -212,7 +212,7 @@ class WorldSST(DataSourceSection):
 
 class WorldTemp2m(DataSourceSection):
     def __init__(self):
-        super().__init__('https://climatereanalyzer.org/clim/t2_daily/json/cfsr_world_t2_day.json',
+        super().__init__('https://climatereanalyzer.org/clim/t2_daily/json_cfsr/cfsr_world_t2_day.json',
                          'World 2m Air Temperature',
                          'World 2m Temp', '°C')
 
